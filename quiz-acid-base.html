@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ເກມທວນຄືນບົດຮຽນ - ຄວາມດຸ່ນດ່ຽງ Acid-Base</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans Lao', 'Phetsarath OT', 'Saysettha OT', sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    min-height: 100vh;
+    padding: 20px;
+    color: #222;
+  }
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    overflow: hidden;
+  }
+  header {
+    background: #0f2027;
+    color: white;
+    padding: 22px 28px;
+    text-align: center;
+  }
+  header h1 { font-size: 1.7rem; margin-bottom: 6px; }
+  header p { opacity: 0.85; font-size: 0.95rem; }
+  .score-bar {
+    display: flex;
+    justify-content: space-between;
+    background: #e8f4f8;
+    padding: 14px 28px;
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+  .quiz-area { padding: 28px; }
+  .question {
+    font-size: 1.22rem;
+    line-height: 1.65;
+    margin-bottom: 22px;
+    color: #0f2027;
+  }
+  .options button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 15px 18px;
+    margin-bottom: 11px;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    background: #fafafa;
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .options button:hover:not(:disabled) {
+    background: #e0f2fe;
+    border-color: #0f2027;
+    transform: translateX(5px);
+  }
+  .options button.correct {
+    background: #d1fae5;
+    border-color: #10b981;
+    color: #065f46;
+  }
+  .options button.wrong {
+    background: #fee2e2;
+    border-color: #ef4444;
+    color: #991b1b;
+  }
+  .options button:disabled { cursor: default; }
+  .controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 26px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    flex: 1;
+    min-width: 140px;
+    padding: 13px 18px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-next { background: #0f2027; color: white; }
+  .btn-next:hover { background: #1a3a4a; }
+  .btn-refresh { background: #f59e0b; color: white; }
+  .btn-refresh:hover { background: #d97706; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .result {
+    text-align: center;
+    padding: 45px 20px;
+  }
+  .result h2 { font-size: 1.9rem; margin-bottom: 12px; color: #0f2027; }
+  .hidden { display: none; }
+  .feedback {
+    margin-top: 18px;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    text-align: center;
+  }
+  .feedback.correct { background: #d1fae5; color: #065f46; }
+  .feedback.wrong { background: #fee2e2; color: #991b1b; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🧪ເກມທວນຄືນບົດຮຽນ - ຄວາມດຸ່ນດ່ຽງ Acid-Base</h1>
+    <p>ຄຳເຕືອນຄຳຖາມຈະສະລັບໄປມາທຸກຄັ້ງທີ່ເລິ່ມໃໝ່ • ຄຳຕອບໃນແຕ່ລະຂໍ້ຈະບໍ່ຢູ່ບ່ອນເກົ່າ • ໂຊກດີກັບການຫຼີ້ນຂໍໃຫ້ເສັງຜ່ານນນນ</p>
+  </header>
+
+  <div class="score-bar">
+    <div>ຂໍ້ທີ <span id="current">1</span> / <span id="total">0</span></div>
+    <div>ຄະແນນ: <span id="score">0</span></div>
+  </div>
+
+  <div class="quiz-area" id="quizArea">
+    <div class="question" id="questionText"></div>
+    <div class="options" id="options"></div>
+    <div id="feedback" class="feedback hidden"></div>
+    <div class="controls">
+      <button class="btn btn-next" id="nextBtn" disabled>ຂໍ້ຕໍ່ໄປ →</button>
+      <button class="btn btn-refresh" id="refreshBtn">🔄 ລີເຟດຄຳຖາມໃໝ່ </button>
+    </div>
+  </div>
+
+  <div class="result hidden" id="resultArea">
+    <h2>🎉 ເກມຈົບແລ້ວ!</h2>
+    <p style="font-size:1.35rem; margin:18px 0;">
+      ເຈົ້າໄດ້ <span id="finalScore"></span> ຄະແນນ ຈາກ <span id="finalTotal"></span> ຂໍ້
+    </p>
+    <p id="percent" style="font-size:1.15rem; color:#555;"></p>
+    <br>
+    <button class="btn btn-refresh" onclick="startGame()">🔄 ຫຼີ້ນອີກເທື່ອ (ຄຳເຕືອນ ຈະມີການສຸ່ມຄຳຖາມໃໝ່)</button>
+  </div>
+</div>
+
+<script>
+const allQuestions = [
+  {
+    q: "ຢູ່ໃນ plasma ກໍ່ເກີດມີຂະບວນການ ປັບດຸນ pH, ນັ້ນແມ່ນສິ່ງທີ່ສຳຄັນ ເພື່ອດຸ່ນດ່ຽງ pH ໃຫ້ຢູ່ໃນພາວະໝັ້ນຄົງ ໃນຂັ້ນຈຸລັງ ແລະ ທົ່ວຮ່າງກາຍ ແນວໃດ? (ເອົາ1ຂໍ້ຖືກທີ່ສຸດ)",
+    options: [
+      "ນໍາໃຊ້ທັງໝົດ ລະບົບສຳຮອງ",
+      "ຂັບຖ່າຍ acid ໃຫ້ລະເຫີຍອາຍ (CO₂)",
+      "ຂັບຖ່າຍ ບັນດາ acid ທີ່ບໍ່ສາມາດລະເຫີຍອາຍ ຜ່ານເສັ້ນທາງ ໄຂ່ຫຼັງ (ຖ່າຍເທ)",
+      "ຖືກມົດທຸກຂໍ້"
+    ],
+    correct: 3
+  },
+  {
+    q: "ກົນໄກຄວບຄຸມ pH ເລືອດດ້ວຍລະບົບສຳຮອງມີຢູ່ໃນ ເລືອດ ຫຼື ຢູ່ໃນຈຸລັງ ມີ ພາກສ່ວນ? (ເອົາ1ຂໍ້ຖືກທີ່ສຸດ)",
+    options: [
+      "ມີ 2 ພາກສ່ວນ: ເລືອດ ແລະ ຈຸລັງ",
+      "ມີ 2 ພາກສ່ວນ: ນຶ່ງ acid ເບົາ ແລະ ເກືອ ຂອງ acid ຢູ່ໃນນຶ່ງຂອງ base ເຂັ້ມ",
+      "ມີ 3 ພາກສ່ວນ: plasma, ເລືອດ ແລະ ຈຸລັງ",
+      "ຖືກທຸກຂໍ້"
+    ],
+    correct: 1
+  },
+  {
+    q: "ບົດບາດຂອງໄຂ່ຫຼັງ ໃນການປັບດຸນ pH ເລືອດ? (ເອົາ1ຂໍ້ຖືກທີ່ສຸດ)",
+    options: [
+      "ໄຂ່ຫຼັງມີຈຸລັງ ທໍ່ໄຂ່ຫຼັງ ຫຼາຍ enzyme carbonic anhydrase ມີໜ້າທີ່ສຳຄັນໃນການຂັບຖ່າຍ acid ຄົງທີ່ ແລະ ທົດແທນຄວາມສະສົມ base",
+      "O₂ ຈາກ plasma ເຂົ້າສູ່ເມັດເລືອດແດງ, ສ້າງເປັນ acid ເຂັ້ມ HHbO₃, ທຳດັ້ນ ຍ້ H₂CO₃ ຂັບອອກ",
+      "ໃນນ້ຳຍ່ຽວ ແມ່ນມີພາວະເປັນໄດ້ທັງກົດ ແລະ ດັ່ງ",
+      "ຖືກໝົດທຸກຂໍ້"
+    ],
+    correct: 3
+  },
+  {
+    q: "ການຊຶມເບື່ອ acid (Toxic acid) ແມ່ນແນວໃດ? (ເອົາ1ຂໍ້ຖືກທີ່ສຸດ)",
+    options: [
+      "ແມ່ນລະບົບທຸກລະບົບໃນຮ່າງກາຍມີການເປັນເພເສຍຫາຍ",
+      "ແມ່ນປະກົດການ acid ແຊກແຊງເຂົ້າສູ່ plasma (ມາຈາກຈຸລັງ ຫລື ນອກຈຸລັງ) ຫລື ປະກົດການ plasma ສູນເສຍ ບັນດາເກືອ base (ຖືກປົດປ່ອຍຢ່າງແຮງຢູ່ລໍາໃສ້, ໄຂ່ຫຼັງ) ເຮັດໃຫ້ pH ມີທ່ວງທ່າຫລຸດລົງ.",
+      "ເຮັດໃຫ້ນ້ຳຍ່ຽວມີຄວາມເຂັ້ມຂຸ້ນ ຫຼື ບໍ່ມີນ້ຳຍ່ຽວເລີຍ",
+      "ຜິດທຸກຂໍ້"
+    ],
+    correct: 1
+  },
+  {
+    q: "ເພື່ອນແບ່ງປະເພດຊຶມເບື່ອ acid ຕາມກົນໄກ ແມ່ນແນວໃດ? (ເອົາ1ຂໍ້ຖືກ)",
+    options: [
+      "2 ແບບຄື: ຊຶມເບື່ອ acid ສະລິລະ ແລະ ຊຶມເບື່ອ acid ພະຍາດ",
+      "2 ແບບຄື: ຊຶມເບື່ອ acid ອາຍ ແລະ ຊຶມເບື່ອ acid ຄົງທີ່",
+      "3 ແບບຄື: ຊຶມເບື່ອ acid ອາຍ, ຊຶມເບື່ອ acid ສະລິລະ ແລະ ຊຶມເບື່ອ acid ພະຍາດ",
+      "3 ແບບຄື: ຊຶມເບື່ອ acid ອາຍ, ຊຶມເບື່ອ acid ຄົງທີ່ ແລະ ຊຶມເບື່ອ acid ພະຍາດ"
+    ],
+    correct: 1
+  },
+  {
+    q: "ຢູ່ໃນ plasma ມີລະດັບ pH ປົກກະຕິເທົ່າໃດ? (ເອົາ1ຂໍ້ຖືກທີ່ສຸດ)",
+    options: [
+      "7,4 ± 0,5",
+      "7,4 ± 0,05",
+      "7,4 ± 0,15",
+      "7,3 ± 0,05"
+    ],
+    correct: 1
+  },
+  {
+    q: "ບົດບາດ ຂອງປອດ ໃນການປັບດຸນ pH ເລືອດ? (ເອົາ1ຂໍ້ຖືກທີ່ສຸດ)",
+    options: [
+      "ໃນກໍລະນີຮ່າງກາຍອັ່ງ CO₂ ຈະເຮັດໃຫ້ pH ຫລຸດ, ຖ້າ pH ຫລຸດຮອດ 7,33 ຈະເຮັດໃຫ້ສູນ ກາງຫາຍໃຈຖືກກະຕຸ້ນຢ່າງຮຸນແຮງ, ເຮັດໃຫ້ມີການລະບາຍ CO₂ເພີ່ມຂຶ້ນ ຈົນກວ່າ pHໃນເລືອດຈະຢູ່ໃນພາວະປົກກະຕິ",
+      "O₂ ຈາກ plasma ເຂົ້າສູ່ເມັດເລືອດແດງ, ສ້າງເປັນ acid ເຂັ້ມ HHbO₃, ທຳດັ້ນ ຍ້ H₂CO₃ ຂັບອອກ",
+      "ເຮົາຫາຍໃຈເອົາ ອົກຊີເຈນ ເຂົ້າໄປ ແລະ ຂັບຖ່າຍອາຍກາກໂບນິກອອກນອກ",
+      "ຖືກໝົດທຸກຂໍ້"
+    ],
+    correct: 0
+  },
+  {
+    q: "ຈົ່ງຍົກຕົວຢ່າງຊຶມເບື່ອ acid ກໍລະນີ ສະລິລະ (ເອົາ1ຂໍ້ຖືກທີ່ສຸດ)",
+    options: [
+      "ໃນເວລາອອກແຮງງານຫນັກ, ສ່ວນນຶ່ງ glucid ແລກປ່ຽນທາດລັກສະນະບໍ່ມີອາກາດ ດັ່ງນັ້ນ acid lactic ຢູ່ໃນເລືອດ ຈຶ່ງເພີ່ມຂຶ້ນຊົ່ວຄາວ",
+      "ໃນເວລາຫິວ (ທ້ອງວ່າງ ຮ່າງຈາກຄາບອາຫານ), ຕັບ ຈະເຄື່ອນໄຫວ ໂດຍການລະດົມ ທາດໄຂມັນ acid ຂອງ cetonic ຈາກຕັບ ສູ່ເລືອດ",
+      "ຜິດໝົດທຸກຂໍ້",
+      "ຂໍ້ ກ ແລະ ຂ ຖືກ"
+    ],
+    correct: 3
+  },
+  {
+    q: "ຊຶມເບື່ອ base (Toxic base) ເປັນແນວໃດ? (ເອົາ1ຂໍ້ຖືກທີ່ສຸດ)",
+    options: [
+      "ພົບເຫັນນ້ອຍ, ຮ່າງກາຍຕ້ານທານດີກ່ວາ ແລະ ວິທີການປິ່ນປົວ ກໍ່ຄ້ອນຂ້າງງ່າຍດາຍກ່ວາ ທຽບ ໃສ່ຊຶມເບື່ອ acid",
+      "ພົບເຫັນຫຼາຍທີ່ສຸດ, ຮ່າງກາຍຕ້ານທານບໍ່ໄດ້ດີ ແລະ ວິທີການປິ່ນປົວ ກໍ່ຄ້ອນຂ້າງສັບສົນກວ່າ ທຽບ ໃສ່ຊຶມເບື່ອ acid",
+      "ເກີດຂຶ້ນ ໃນກໍລະນີ ອາກາດຫມູນວຽນເພີ່ມຂຶ້ນ ເຮັດໃຫ້ມີການສູນເສຍ CO₂ ຫຼວງຫຼາຍ",
+      "ແມ່ນປະກົດການ ສູນເສຍ ion H⁺ ໃນເລືອດຫຼາຍ ຫຼື plasma"
+    ],
+    correct: 0
+  },
+  {
+    q: "ລະບົບສຳຮອງ (buffer system) ຫຼັກໃນ plasma ແມ່ນລະບົບໃດ? (ເອົາ1ຂໍ້ຖືກທີ່ສຸດ)",
+    options: [
+      "ລະບົບ Bicarbonate (H₂CO₃ / NaHCO₃)",
+      "ລະບົບ ຫາຍໃຈ ແລະ ໄຂ່ຫຼັງ",
+      "ລະບົບ Phosphate",
+      "ລະບົບ Protein ແລະ NaHCO₃"
+    ],
+    correct: 0
+  },
+  {
+    q: "ໄຂ່ຫຼັງຂັບຖ່າຍ acid ທີ່ບໍ່ສາມາດລະເຫີຍເປັນອາຍ (non-volatile acid) ໄດ້ແນວໃດ? (ເອົາ1ຂໍ້ຖືກທີ່ສຸດ)",
+    options: [
+      "ຜ່ານການຂັບຖ່າຍການຄ້າງຂອງ CO₂ ໃນເລືອດ",
+      "ຜ່ານການຂັບຖ່າຍ H⁺ ແລະ ສ້າງ NH₄⁺",
+      "ການຂັບຖ່າຍ NH₄⁺ ແລະ ນ້ຳອອກທາງຍ່ຽວ",
+      "ຜິດໝົດທຸກຂໍ້"
+    ],
+    correct: 1
+  },
+  {
+    q: "ພະຍາດໃດທີ່ເຮັດໃຫ້ເກີດຊຶມເບື່ອ Acid ອາຍ? (ເອົາ1ຂໍ້ຖືກທີ່ສຸດ)",
+    options: [
+      "ພະຍາດປອດ, ຫົວໃຈ, ຫຼອດລົມອຸດຕັນ",
+      "ພະຍາດຊຶມເຊື້ອເລືອດ, ອັກເສບປອດ, ໄຂ້ທະລະພິດ",
+      "ວັນນະໂລກ, ປະດົງຂໍ້, ພູມແພ້",
+      "ຜິດໝົດທຸກຂໍ້"
+    ],
+    correct: 0
+  }
+];
+
+let questions = [];
+let currentIndex = 0;
+let score = 0;
+let answered = false;
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function startGame() {
+  questions = shuffle([...allQuestions]);
+  currentIndex = 0;
+  score = 0;
+  answered = false;
+
+  document.getElementById('quizArea').classList.remove('hidden');
+  document.getElementById('resultArea').classList.add('hidden');
+  document.getElementById('score').textContent = score;
+  document.getElementById('total').textContent = questions.length;
+  showQuestion();
+}
+
+function showQuestion() {
+  answered = false;
+  const q = questions[currentIndex];
+  document.getElementById('current').textContent = currentIndex + 1;
+  document.getElementById('questionText').textContent = (currentIndex + 1) + ". " + q.q;
+  document.getElementById('feedback').classList.add('hidden');
+  document.getElementById('nextBtn').disabled = true;
+
+  const opts = q.options.map((text, idx) => ({ text, originalIndex: idx }));
+  shuffle(opts);
+
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+
+  opts.forEach((opt) => {
+    const btn = document.createElement('button');
+    btn.textContent = opt.text;                 // ← ไม่มี ກ. ຂ. ຄ. ງ. แล้ว
+    btn.dataset.original = opt.originalIndex;
+    btn.onclick = () => selectAnswer(btn, opt.originalIndex, q.correct);
+    optionsDiv.appendChild(btn);
+  });
+}
+
+function selectAnswer(btn, selected, correct) {
+  if (answered) return;
+  answered = true;
+
+  const buttons = document.querySelectorAll('#options button');
+  buttons.forEach(b => {
+    b.disabled = true;
+    if (parseInt(b.dataset.original) === correct) {
+      b.classList.add('correct');
+    }
+  });
+
+  const feedback = document.getElementById('feedback');
+  feedback.classList.remove('hidden', 'correct', 'wrong');
+
+  if (selected === correct) {
+    score++;
+    document.getElementById('score').textContent = score;
+    btn.classList.add('correct');
+    feedback.textContent = "✅ ຖືກຕ້ອງ! ເສັງຜ່ານແນ່ນອນ";
+    feedback.classList.add('correct');
+  } else {
+    btn.classList.add('wrong');
+    feedback.textContent = "❌ ຜິດ! ເສີຍໃຈນຳເຈົ້າຈະເສັງບໍ່ຜ່ານ";
+    feedback.classList.add('wrong');
+  }
+  document.getElementById('nextBtn').disabled = false;
+}
+
+document.getElementById('nextBtn').onclick = () => {
+  currentIndex++;
+  if (currentIndex < questions.length) {
+    showQuestion();
+  } else {
+    document.getElementById('quizArea').classList.add('hidden');
+    document.getElementById('resultArea').classList.remove('hidden');
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('finalTotal').textContent = questions.length;
+    const pct = Math.round((score / questions.length) * 100);
+    document.getElementById('percent').textContent = `ເປີເຊັນ: ${pct}%`;
+  }
+};
+
+document.getElementById('refreshBtn').onclick = startGame;
+startGame();
+</script>
+</body>
+</html>
